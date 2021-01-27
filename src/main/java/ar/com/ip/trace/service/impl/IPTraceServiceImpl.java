@@ -1,173 +1,201 @@
 package ar.com.ip.trace.service.impl;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
-import javax.transaction.Transactional;
 
-import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import ar.com.ip.trace.dto.IPTraceResponseDTO;
-import ar.com.ip.trace.dto.converter.ConverterApiDTO;
-import ar.com.ip.trace.dto.converter.ConverterInfoDTO;
+import ar.com.ip.trace.dto.StatsResponseDTO;
 import ar.com.ip.trace.dto.ip2country.IP2CountryResponseDTO;
-import ar.com.ip.trace.dto.restCountries.CurrencyDTO;
 import ar.com.ip.trace.dto.restCountries.RestCountriesResponseDTO;
+import ar.com.ip.trace.entities.IPData;
 import ar.com.ip.trace.exception.IPTraceException;
+import ar.com.ip.trace.repository.IPDataRepository;
+import ar.com.ip.trace.service.CurrencyConversionService;
+import ar.com.ip.trace.service.IP2CountryService;
 import ar.com.ip.trace.service.IPTraceService;
-import ar.com.ip.trace.utils.IPUtils;
+import ar.com.ip.trace.service.RestCountriesService;
+import ar.com.ip.trace.utils.IPTraceUtils;
 
 
 @Service
-@Transactional
 public class IPTraceServiceImpl implements IPTraceService{
 	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	
-	@Value("${ip.trace.api.ip2country.info}")
-	private String ip2CountryEndpoint;	
-
-	@Value("${ip.trace.api.rest.countries}")
-	private String restCountriesEndpoint;	
-	
-	@Value("${ip.trace.api.fixer}")
-	private String fixerApiEndpoint;	
-	
-	@Value("${ip.trace.fixer.api.key}")
-	private String fixerApiKey;	
-	
-	@Autowired
-	private RestTemplate restTemplate;
-	
-	@Autowired
-	private IPUtils ipUtils;
 		
+	@Autowired
+	private IPTraceUtils ipTraceUtils;
 	
+	@Autowired
+	private IPDataRepository ipDataRepository;
+
+	@Autowired
+	private IP2CountryService ip2CountryService;
+
+	@Autowired
+	private RestCountriesService restCountriesService;
+
+	@Autowired
+	private CurrencyConversionService currencyConversionService;
+		
+	@Transactional(isolation=Isolation.READ_COMMITTED)
 	public IPTraceResponseDTO getTraceData(String ip) throws IPTraceException {
 		
 		logger.info("getting data for ip: "+ip);
+		IPTraceResponseDTO ipTraceResponseDTO;
+		IP2CountryResponseDTO ip2CountryResponseDTO = ip2CountryService.getCountryByIP(ip);
 		
-		IP2CountryResponseDTO ip2CountryResponseDTO = getCountryByIP(ip);
+		logger.info("getting data from db");
+		IPData ipData = ipDataRepository.findAllByIsoCode(ip2CountryResponseDTO.getCountryCode());
 		
-		RestCountriesResponseDTO restCountriesResponseDTO = getCountryData(ip2CountryResponseDTO.getCountryCode());
+		if(ipData != null) {
+			ipTraceResponseDTO = createDTO(ip, ipData, ip2CountryResponseDTO);
+			ipData.updateInvocations();
+			saveData(ipData);
+			return ipTraceResponseDTO;
+		}
 		
-		Calendar cal = Calendar.getInstance();
-		Date now = cal.getTime();
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/YY hh:mm:ss");
+		RestCountriesResponseDTO restCountriesResponseDTO = restCountriesService.getCountryData(ip2CountryResponseDTO.getCountryCode());
 		
+		ipTraceResponseDTO = createDTO(ip, ip2CountryResponseDTO, restCountriesResponseDTO);
+		
+		saveData(ipTraceResponseDTO,restCountriesResponseDTO);
+				
+		return ipTraceResponseDTO;
+	}
+
+
+	private void saveData(IPData ipData) {
+		ipDataRepository.save(ipData);
+	}
+
+	private void saveData(IPTraceResponseDTO ipTraceResponseDTO, RestCountriesResponseDTO restCountriesResponseDTO) {
+		long dist = ipTraceUtils.getEstimatedDistance(restCountriesResponseDTO.getLatlng());
+		ipTraceResponseDTO.setEstimated_distance(dist + " kms");
+
+		IPData ipData = new IPData(ipTraceResponseDTO, restCountriesResponseDTO,dist);
+		ipDataRepository.save(ipData);
+	}
+
+	private IPTraceResponseDTO createDTO(String ip, IPData ipData, IP2CountryResponseDTO ip2CountryResponseDTO) throws IPTraceException {
 		IPTraceResponseDTO ipTraceResponseDTO = new IPTraceResponseDTO();
 		
-		ipTraceResponseDTO.setDate(sdf.format(now));
 		ipTraceResponseDTO.setIp(ip);
-		ipTraceResponseDTO.setIso_code(ip2CountryResponseDTO.getCountryCode());
-		ipTraceResponseDTO.setCountry(ip2CountryResponseDTO.getCountryName());
+		ipTraceResponseDTO.setCountry(ipData.getCountry());
 		
-		List<String> dates = getDates(restCountriesResponseDTO.getTimezones());
-		ipTraceResponseDTO.setTimes(dates);
+		String dist = ipData.getEstimatedDistance().toString() + " kms";
+		ipTraceResponseDTO.setEstimated_distance(dist);
+		ipTraceResponseDTO.setIso_code(ipData.getIsoCode());
 		
-		List<String> lenguages = restCountriesResponseDTO.getLanguages().stream().map(l -> l.toString()).collect(Collectors.toList());
-		ipTraceResponseDTO.setLenguages(lenguages);
+		List<String> languages = ipData.getLanguages().stream().map(l -> l.toString()).collect(Collectors.toList());
+		ipTraceResponseDTO.setLanguages(languages);
 		
-		String currency = getCurrency(restCountriesResponseDTO.getCurrencies());
+		String formattedDate = ipTraceUtils.getFormattedDate();
+		ipTraceResponseDTO.setDate(formattedDate);
+		
+		String currency = currencyConversionService.getCurrency(ipData.getCurrency());
 		ipTraceResponseDTO.setCurrency(currency);
 		
-		long dist = ipUtils.getEstimatedDistance(restCountriesResponseDTO.getLatlng());
-		ipTraceResponseDTO.setEstimated_distance(dist + " kms");
+		List<String> timeZones = ipData.getTimes().stream().map(t-> t.toString()).collect(Collectors.toList());
+		List<String> times = ipTraceUtils.getDates(timeZones);
+		ipTraceResponseDTO.setTimes(times);
 		
 		return ipTraceResponseDTO;
 	}
 
+	private IPTraceResponseDTO createDTO(String ip, IP2CountryResponseDTO ip2CountryResponseDTO,
+			RestCountriesResponseDTO restCountriesResponseDTO) throws IPTraceException {
 		
-	private String getCurrency(List<CurrencyDTO> currencies) throws IPTraceException {
-		String curr = currencies.stream().map(c -> c.toString()).collect(Collectors.toList()).get(0);
-				
-		String endpoint = fixerApiEndpoint+fixerApiKey+"/pair/EUR/"+curr;
+		String formattedDate = ipTraceUtils.getFormattedDate();
 		
-		ParameterizedTypeReference<ConverterApiDTO> responseType = new ParameterizedTypeReference<ConverterApiDTO>(){};
-
-		ResponseEntity<ConverterApiDTO> response = restTemplate.exchange(endpoint, HttpMethod.GET, new HttpEntity<String>(""), responseType);
-
-		Boolean isSuccesfull = response.getStatusCode().is2xxSuccessful();
-		if((isSuccesfull && response.getBody()==null) || !isSuccesfull) {
-			throw new IPTraceException("There was a problem at calling "+endpoint+". Please reintent.",HttpStatus.SERVICE_UNAVAILABLE);
-		}
-		Double rate = response.getBody().getConversion_rate();
+		IPTraceResponseDTO ipTraceResponseDTO = new IPTraceResponseDTO();
 		
-		return curr + " (1 EUR = " + rate + " "+curr+")";
-	}
-
-
-	private List<String> getDates(List<String> timeZones) {
-		List<String> res = timeZones.stream().map(tz -> getDateWithTimeZone(tz)).collect(Collectors.toList());
-		return res;
-	}
-	
-	private String getDateWithTimeZone(String tz) {
-		SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
-		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-		Calendar cal = Calendar.getInstance();
+		ipTraceResponseDTO.setDate(formattedDate);
+		ipTraceResponseDTO.setIp(ip);
+		ipTraceResponseDTO.setIso_code(ip2CountryResponseDTO.getCountryCode());
+		ipTraceResponseDTO.setCountry(ip2CountryResponseDTO.getCountryName());
 		
-		String op = tz.substring(3,4);
-		Integer hOffset = Integer.parseInt(tz.substring(4,6));
-		Integer mOffset = Integer.parseInt(tz.substring(7,9));
-		if(StringUtils.equals(op, "-")) {
-			hOffset = -hOffset;
-			mOffset = -mOffset;		
-		}
-		cal.add(Calendar.HOUR, hOffset);
-		cal.add(Calendar.MINUTE, mOffset);
-		String date = sdf.format(cal.getTime());
+		List<String> dates = ipTraceUtils.getDates(restCountriesResponseDTO.getTimezones());
+		ipTraceResponseDTO.setTimes(dates);
 		
-		return date + " (" + tz +")";
-	}
-
-	private IP2CountryResponseDTO getCountryByIP(String ip) throws IPTraceException{
+		List<String> lenguages = restCountriesResponseDTO.getLanguages().stream().map(l -> l.toString()).collect(Collectors.toList());
+		ipTraceResponseDTO.setLanguages(lenguages);
 		
-		String endpoint = ip2CountryEndpoint + "?"+ip;
-	
-		ParameterizedTypeReference<IP2CountryResponseDTO> responseType = new ParameterizedTypeReference<IP2CountryResponseDTO>(){};
-
-		ResponseEntity<IP2CountryResponseDTO> response = restTemplate.exchange(endpoint, HttpMethod.GET, new HttpEntity<String>(""), responseType);
-
-		Boolean isSuccesfull = response.getStatusCode().is2xxSuccessful();
-		if((isSuccesfull && response.getBody()==null) || !isSuccesfull) {
-			throw new IPTraceException("There was a problem at calling "+endpoint+". Please reintent.",HttpStatus.SERVICE_UNAVAILABLE);
-		}
+		String curr = restCountriesResponseDTO.getCurrencies().stream().map(c -> c.toString()).collect(Collectors.toList()).get(0);
+		String currency = currencyConversionService.getCurrency(curr);
+		ipTraceResponseDTO.setCurrency(currency);
 		
-		return response.getBody();
+		long dist = ipTraceUtils.getEstimatedDistance(restCountriesResponseDTO.getLatlng());
+		ipTraceResponseDTO.setEstimated_distance(dist + " kms");
+		
+		return ipTraceResponseDTO;
 	}
 	
-	private RestCountriesResponseDTO getCountryData(String code) throws IPTraceException {
-		
-		String endpoint = restCountriesEndpoint + code;
-		
-		ParameterizedTypeReference<RestCountriesResponseDTO> responseType = new ParameterizedTypeReference<RestCountriesResponseDTO>(){};
-
-		ResponseEntity<RestCountriesResponseDTO> response = restTemplate.exchange(endpoint, HttpMethod.GET, new HttpEntity<String>(""), responseType);
-
-		Boolean isSuccesfull = response.getStatusCode().is2xxSuccessful();
-		if((isSuccesfull && response.getBody()==null) || !isSuccesfull) {
-			throw new IPTraceException("There was a problem at calling "+endpoint+". Please reintent.",HttpStatus.SERVICE_UNAVAILABLE);
-		}
-		
-		return response.getBody();
+	public StatsResponseDTO getStats() {
+		Object[] res = (Object[]) ipDataRepository.getStats();
+		Long maxDistance = (Long) res[0];
+		Long minDistance = (Long) res[1];
+		Long avgDistance = (Long) res[2];
+		StatsResponseDTO statsResponseDTO = new StatsResponseDTO(maxDistance,minDistance,avgDistance);
+		return statsResponseDTO;
 	}
+
+
+	public IPTraceUtils getIpTraceUtils() {
+		return ipTraceUtils;
+	}
+
+
+	public void setIpTraceUtils(IPTraceUtils ipTraceUtils) {
+		this.ipTraceUtils = ipTraceUtils;
+	}
+
+
+	public IPDataRepository getIpDataRepository() {
+		return ipDataRepository;
+	}
+
+
+	public void setIpDataRepository(IPDataRepository ipDataRepository) {
+		this.ipDataRepository = ipDataRepository;
+	}
+
+
+	public IP2CountryService getIp2CountryService() {
+		return ip2CountryService;
+	}
+
+
+	public void setIp2CountryService(IP2CountryService ip2CountryService) {
+		this.ip2CountryService = ip2CountryService;
+	}
+
+
+	public RestCountriesService getRestCountriesService() {
+		return restCountriesService;
+	}
+
+
+	public void setRestCountriesService(RestCountriesService restCountriesService) {
+		this.restCountriesService = restCountriesService;
+	}
+
+
+	public CurrencyConversionService getCurrencyConversionService() {
+		return currencyConversionService;
+	}
+
+
+	public void setCurrencyConversionService(CurrencyConversionService currencyConversionService) {
+		this.currencyConversionService = currencyConversionService;
+	}
+		
 
 }

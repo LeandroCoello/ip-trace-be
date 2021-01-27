@@ -16,12 +16,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ar.com.ip.trace.dto.IPRequestDTO;
 import ar.com.ip.trace.dto.IPTraceResponseDTO;
+import ar.com.ip.trace.dto.StatsResponseDTO;
 import ar.com.ip.trace.exception.IPTraceException;
 import ar.com.ip.trace.service.IPTraceService;
-import ar.com.ip.trace.utils.IPUtils;
+import ar.com.ip.trace.utils.IPTraceUtils;
 
 @RestController
-@RequestMapping("/hola")
+@RequestMapping("/")
 @CrossOrigin(origins="*")
 public class IPTraceController {
 
@@ -31,7 +32,7 @@ public class IPTraceController {
     private IPTraceService ipTraceService;
 	
 	@Autowired
-	private IPUtils ipUtils;
+	private IPTraceUtils ipTraceUtils;
 	
 	
 	@GetMapping("/ping")
@@ -42,21 +43,20 @@ public class IPTraceController {
 	@PostMapping(path = "/trace", consumes = "application/json", produces = "application/json")
 	public ResponseEntity<IPTraceResponseDTO> traceIP(@RequestBody IPRequestDTO ipRequestDTO) throws IPTraceException{
 
-		if(ipRequestDTO == null  || StringUtils.isBlank(ipRequestDTO.getIp()) || ipUtils.isValidIPFormat(ipRequestDTO.getIp())) {
+		if(ipRequestDTO == null  || StringUtils.isBlank(ipRequestDTO.getIp()) || ipTraceUtils.isValidIPFormat(ipRequestDTO.getIp())) {
 			throw new IPTraceException("Null body or IP.", HttpStatus.BAD_REQUEST);
 		}
 		IPTraceResponseDTO ipTraceData = ipTraceService.getTraceData(ipRequestDTO.getIp());
 		return new ResponseEntity<IPTraceResponseDTO>(ipTraceData, HttpStatus.OK);
 	}
 	
-//	@GetMapping(path = "/stats", consumes = "application/json", produces = "application/json")
-//	public ResponseEntity<TransaccionDetalleDTO> getDetalleTransaccion(@RequestHeader(required = true, value = VisualizadorTransaccionesBackendApplication.HEADER_CUSTOM_AUTH) String authorizationHeader,
-//			@RequestBody IdTransaccionDTO idTransaccionDTO) throws TransaccionException {
-//		logger.info("Procesando getDetalleTransacciones.");
-//		TransaccionDetalleDTO transaccionDetalle = transaccionService.getDetalleTransacciones(authorizationHeader,idTransaccionDTO);
-//	
-//		return new ResponseEntity<TransaccionDetalleDTO>(transaccionDetalle, HttpStatus.OK);
-//	}
+	@GetMapping(path = "/stats", produces = "application/json")
+	public ResponseEntity<StatsResponseDTO> getDetalleTransaccion() throws IPTraceException {
+		
+		StatsResponseDTO statsResponseDTO = ipTraceService.getStats();
+	
+		return new ResponseEntity<StatsResponseDTO>(statsResponseDTO, HttpStatus.OK);
+	}
 	
 	
 	

@@ -1,6 +1,5 @@
 package ar.com.ip.trace.dto;
 
-import java.util.Date;
 import java.util.List;
 
 public class IPTraceResponseDTO {
@@ -9,7 +8,7 @@ public class IPTraceResponseDTO {
 	private String date;
 	private String country;
 	private String iso_code;
-	private List<String> lenguages;
+	private List<String> languages;
 	private String currency;
 	private List<String> times;
 	private String estimated_distance;
@@ -38,11 +37,11 @@ public class IPTraceResponseDTO {
 	public void setIso_code(String iso_code) {
 		this.iso_code = iso_code;
 	}
-	public List<String> getLenguages() {
-		return lenguages;
+	public List<String> getLanguages() {
+		return languages;
 	}
-	public void setLenguages(List<String> lenguages) {
-		this.lenguages = lenguages;
+	public void setLanguages(List<String> languages) {
+		this.languages = languages;
 	}
 	public String getCurrency() {
 		return currency;
