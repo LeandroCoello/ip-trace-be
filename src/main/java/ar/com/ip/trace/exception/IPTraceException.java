@@ -1,7 +1,10 @@
 package ar.com.ip.trace.exception;
 
 import org.springframework.http.HttpStatus;
-
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ */
 public class IPTraceException extends Exception {
 
 	private static final long serialVersionUID = -5545032666753336297L;

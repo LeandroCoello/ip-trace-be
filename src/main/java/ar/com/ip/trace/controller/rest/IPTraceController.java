@@ -2,8 +2,6 @@ package ar.com.ip.trace.controller.rest;
 
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +19,14 @@ import ar.com.ip.trace.exception.IPTraceException;
 import ar.com.ip.trace.service.IPTraceService;
 import ar.com.ip.trace.utils.IPTraceUtils;
 
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ */
 @RestController
 @RequestMapping("/")
 @CrossOrigin(origins="*")
 public class IPTraceController {
-
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@Autowired
     private IPTraceService ipTraceService;
@@ -40,16 +40,26 @@ public class IPTraceController {
 		return "OK";
 	}
 
+	/**
+	 * @param IPRequestDTO ipRequestDTO
+	 * @return ResponseEntity<IPTraceResponseDTO>
+	 * @throws IPTraceException
+	 */
 	@PostMapping(path = "/trace", consumes = "application/json", produces = "application/json")
 	public ResponseEntity<IPTraceResponseDTO> traceIP(@RequestBody IPRequestDTO ipRequestDTO) throws IPTraceException{
 
+		//Se valida que el body no sea vacio y que la ip sea del formato correcto
 		if(ipRequestDTO == null  || StringUtils.isBlank(ipRequestDTO.getIp()) || ipTraceUtils.isValidIPFormat(ipRequestDTO.getIp())) {
-			throw new IPTraceException("Null body or IP.", HttpStatus.BAD_REQUEST);
+			throw new IPTraceException("Body de request o ip invalidos", HttpStatus.BAD_REQUEST);
 		}
 		IPTraceResponseDTO ipTraceData = ipTraceService.getTraceData(ipRequestDTO.getIp());
 		return new ResponseEntity<IPTraceResponseDTO>(ipTraceData, HttpStatus.OK);
 	}
 	
+	/**
+	 * @return ResponseEntity<StatsResponseDTO>
+	 * @throws IPTraceException
+	 */
 	@GetMapping(path = "/stats", produces = "application/json")
 	public ResponseEntity<StatsResponseDTO> getDetalleTransaccion() throws IPTraceException {
 		

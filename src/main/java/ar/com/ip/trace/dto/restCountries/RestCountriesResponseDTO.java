@@ -1,7 +1,10 @@
 package ar.com.ip.trace.dto.restCountries;
 
 import java.util.List;
-
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ * DTO del servicio RestCountries
+ */
 public class RestCountriesResponseDTO {
 
 	private List<Double> latlng;

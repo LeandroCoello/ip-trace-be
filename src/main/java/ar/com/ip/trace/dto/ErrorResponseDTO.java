@@ -1,6 +1,9 @@
 package ar.com.ip.trace.dto;
 
-
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ */
 public class ErrorResponseDTO {
 
 	private int status;

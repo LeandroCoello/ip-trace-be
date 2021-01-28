@@ -1,7 +1,10 @@
 package ar.com.ip.trace.dto;
 
 import java.util.List;
-
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ */
 public class IPTraceResponseDTO {
 
 	private String ip;

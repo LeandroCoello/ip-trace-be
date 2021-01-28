@@ -1,5 +1,5 @@
 echo "\n>>>>>>>>>> Compilando app <<<<<<<<<<\n"
-mvn clean package
+mvn clean package 
 echo "\n>>>>>>>>>> Deteniendo contenedor <<<<<<<<<<\n"
 docker container stop ip_trace_container
 echo "\n>>>>>>>>>> Generando imagen <<<<<<<<<<\n"

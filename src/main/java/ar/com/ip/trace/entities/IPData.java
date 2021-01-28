@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -18,7 +17,10 @@ import javax.persistence.Table;
 
 import ar.com.ip.trace.dto.IPTraceResponseDTO;
 import ar.com.ip.trace.dto.restCountries.RestCountriesResponseDTO;
-
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ */
 @Entity
 @Table(name = "ip_data")
 public class IPData implements Serializable{

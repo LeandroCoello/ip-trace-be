@@ -21,3 +21,6 @@ CREATE TABLE ip_data_language (
     ip_data_id BIGINT REFERENCES ip_data(ip_data_id),
     PRIMARY KEY (ip_data_language_id)
 );
+
+CREATE INDEX iso_code_index
+ON ip_data(iso_code);

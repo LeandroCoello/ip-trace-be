@@ -1,6 +1,8 @@
 package ar.com.ip.trace.service.impl;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
@@ -15,8 +17,16 @@ import ar.com.ip.trace.dto.converter.ConverterApiDTO;
 import ar.com.ip.trace.exception.IPTraceException;
 import ar.com.ip.trace.service.CurrencyConversionService;
 
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ * 
+ * Service de la API ExchangeRate
+ */
 @Service
 public class CurrencyConversionServiceImpl implements CurrencyConversionService {
+	
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
 	
 	@Value("${ip.trace.api.fixer}")
 	private String fixerApiEndpoint;	
@@ -27,14 +37,24 @@ public class CurrencyConversionServiceImpl implements CurrencyConversionService 
 	@Autowired
 	private RestTemplate restTemplate;
 
+	/**
+	 * @param String currency
+	 * @return String
+	 * @throws IPTraceException
+	 */
 	public String getCurrency(String currency) throws IPTraceException {
 		
+		// Se arma endpoint con parametros
 		String endpoint = fixerApiEndpoint+fixerApiKey+"/pair/EUR/"+currency;
-		
+		logger.info("Invocando a: "+endpoint);
+
+		// Se define el tipo de la respuesta del servicio
 		ParameterizedTypeReference<ConverterApiDTO> responseType = new ParameterizedTypeReference<ConverterApiDTO>(){};
 
+		// Se realiza la invocacion
 		ResponseEntity<ConverterApiDTO> response = restTemplate.exchange(endpoint, HttpMethod.GET, new HttpEntity<String>(""), responseType);
 
+		// Validacion de la respuesta
 		Boolean isSuccesfull = response.getStatusCode().is2xxSuccessful();
 		if((isSuccesfull && response.getBody()==null) || !isSuccesfull) {
 			throw new IPTraceException("There was a problem at calling "+endpoint+". Please reintent.",HttpStatus.SERVICE_UNAVAILABLE);

@@ -11,12 +11,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ */
 @Component
 public class IPTraceUtils {
 	
 	@Value("${ip.trace.bs.as.lat.long}")
 	private List<Double> bsAsLatLong;
 
+	/**
+	 * @param String ip
+	 * @return Boolean
+	 */
 	public Boolean isValidIPFormat(String ip) {
 		if(StringUtils.isBlank(ip)) {
 			return false;
@@ -24,6 +32,10 @@ public class IPTraceUtils {
 		return ip.matches("([01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])");
 	}
 	
+	/**
+	 * @param List<Double> latLong
+	 * @return long
+	 */
 	public long getEstimatedDistance(List<Double> latLong) {
 		Double lat1 = bsAsLatLong.get(0);
 		Double lon1 = bsAsLatLong.get(1);
@@ -43,11 +55,17 @@ public class IPTraceUtils {
 		return res;
 	}
 	
-	public String getDateWithTimeZone(String tz) {
+	/**
+	 * @param String tz
+	 * @return String
+	 */
+	public String getTimeWithTimeZone(String tz) {
+		//Se parte de timezone UTC
 		SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
 		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 		Calendar cal = Calendar.getInstance();
 		
+		//Se calcula el offset de acuerdo al signo
 		String op = tz.substring(3,4);
 		Integer hOffset = Integer.parseInt(tz.substring(4,6));
 		Integer mOffset = Integer.parseInt(tz.substring(7,9));
@@ -62,6 +80,9 @@ public class IPTraceUtils {
 		return date + " (" + tz +")";
 	}
 	
+	/**
+	 * @return String
+	 */
 	public String getFormattedDate() {
 		
 		Calendar cal = Calendar.getInstance();
@@ -73,8 +94,12 @@ public class IPTraceUtils {
 		return date;
 	}
 	
-	public List<String> getDates(List<String> timeZones) {
-		List<String> res = timeZones.stream().map(tz -> getDateWithTimeZone(tz)).collect(Collectors.toList());
+	/**
+	 * @param List<String> timeZones
+	 * @return List<String>
+	 */
+	public List<String> getTimes(List<String> timeZones) {
+		List<String> res = timeZones.stream().map(tz -> getTimeWithTimeZone(tz)).collect(Collectors.toList());
 		return res;
 	}
 
