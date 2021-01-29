@@ -5,7 +5,7 @@ Está desarrollado con Java 8 y Maven superior a 3.5.0.
 
 # Entorno Local
 
-Utilizando el plugin de App Engine para maven:
+Utilizando el plugin de App Engine para maven. Se necesita Google Cloud SDK.
 
 ```bash
 mvn package appengine:run
