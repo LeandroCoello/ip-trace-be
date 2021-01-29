@@ -112,8 +112,22 @@ public class IPTraceBackendApplicationTests {
 	    
 		assertEquals(400 ,status);
 		assertEquals(400 ,response.getStatus());
-		assertEquals("Body de request o ip invalidos", response.getMsg());
+		assertEquals("Body de request o ip invalidos", response.getMsg());	
+	}
+	
+	/**
+	 * Test de ip con formato invalido
+	 */
+	@Test
+	public void getTraceFormatError() throws Exception {
 		
+		MvcResult result = callApi("5.632");
+		ErrorResponseDTO response = gson.fromJson(result.getResponse().getContentAsString(), ErrorResponseDTO.class);
+		int status = result.getResponse().getStatus();
+		
+		assertEquals(400 ,status);
+		assertEquals(400 ,response.getStatus());
+		assertEquals("Body de request o ip invalidos", response.getMsg());	
 	}
 	
 	/**

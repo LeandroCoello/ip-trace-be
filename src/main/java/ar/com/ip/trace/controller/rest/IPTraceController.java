@@ -49,7 +49,7 @@ public class IPTraceController {
 	public ResponseEntity<IPTraceResponseDTO> traceIP(@RequestBody IPRequestDTO ipRequestDTO) throws IPTraceException{
 
 		//Se valida que el body no sea vacio y que la ip sea del formato correcto
-		if(ipRequestDTO == null  || StringUtils.isBlank(ipRequestDTO.getIp()) || ipTraceUtils.isValidIPFormat(ipRequestDTO.getIp())) {
+		if(ipRequestDTO == null  || StringUtils.isBlank(ipRequestDTO.getIp()) || !ipTraceUtils.isValidIPFormat(ipRequestDTO.getIp())) {
 			throw new IPTraceException("Body de request o ip invalidos", HttpStatus.BAD_REQUEST);
 		}
 		IPTraceResponseDTO ipTraceData = ipTraceService.getTraceData(ipRequestDTO.getIp());

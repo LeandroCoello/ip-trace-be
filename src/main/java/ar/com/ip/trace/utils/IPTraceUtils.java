@@ -29,7 +29,7 @@ public class IPTraceUtils {
 		if(StringUtils.isBlank(ip)) {
 			return false;
 		}
-		return ip.matches("([01]?[0-9]{1,2}|2[0-4][0-9]|25[0-5])");
+		return ip.matches("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$");
 	}
 	
 	/**
