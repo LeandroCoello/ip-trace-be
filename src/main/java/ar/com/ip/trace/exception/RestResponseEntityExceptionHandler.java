@@ -14,12 +14,21 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import ar.com.ip.trace.dto.ErrorResponseDTO;
 
-
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ * Handler para el manejo de excepciones
+ */
 @ControllerAdvice
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 	
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * @param IPTraceException ex
+     * @param WebRequest request
+     * @return ResponseEntity<Object>
+     */
     @ExceptionHandler(value = { IPTraceException.class }) 
     protected ResponseEntity<Object> handleTransaccionException(IPTraceException ex, WebRequest request) {
         
@@ -29,6 +38,11 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     	return handleExceptionInternal(ex, resBody, new HttpHeaders(), ex.getStatus(), request);
     }
+    /**
+     * @param HttpClientErrorException ex
+     * @param WebRequest request
+     * @return ResponseEntity<Object>
+     */
     @ExceptionHandler(value = { HttpClientErrorException.class }) 
     protected ResponseEntity<Object> handleHttpClientErrorException(HttpClientErrorException ex, WebRequest request) {
     	
@@ -39,6 +53,11 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     	return handleExceptionInternal(ex, resBody, new HttpHeaders(), HttpStatus.SERVICE_UNAVAILABLE, request);
     }
 
+    /**
+     * @param Exception ex
+     * @param WebRequest request
+     * @return ResponseEntity<Object>
+     */
     @ExceptionHandler(value = { Exception.class }) 
     protected ResponseEntity<Object> handleInternalException(Exception ex, WebRequest request) {
         

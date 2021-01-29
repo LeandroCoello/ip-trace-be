@@ -1,0 +1,199 @@
+{
+	"info": {
+		"_postman_id": "a49eb0d8-37e6-45d1-8437-1dc4ae153b02",
+		"name": "ip-trace-be",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "apis",
+			"item": [
+				{
+					"name": "ip2country",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.ip2country.info/ip?5.6.7.8",
+							"protocol": "https",
+							"host": [
+								"api",
+								"ip2country",
+								"info"
+							],
+							"path": [
+								"ip"
+							],
+							"query": [
+								{
+									"key": "5.6.7.8",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "rest countries",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://restcountries.eu/rest/v2/alpha/de",
+							"protocol": "https",
+							"host": [
+								"restcountries",
+								"eu"
+							],
+							"path": [
+								"rest",
+								"v2",
+								"alpha",
+								"de"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "exchangerate",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://v6.exchangerate-api.com/v6/ce294e447800df172a389df8//pair/EUR/ARS",
+							"protocol": "https",
+							"host": [
+								"v6",
+								"exchangerate-api",
+								"com"
+							],
+							"path": [
+								"v6",
+								"ce294e447800df172a389df8",
+								"",
+								"pair",
+								"EUR",
+								"ARS"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "trace local",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"ip\": \"181.23.238.193\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/trace",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"trace"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "trace gcp",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"ip\": \"5.6.7.8\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://meli-ip-trace-be.uc.r.appspot.com/trace",
+					"protocol": "https",
+					"host": [
+						"meli-ip-trace-be",
+						"uc",
+						"r",
+						"appspot",
+						"com"
+					],
+					"path": [
+						"trace"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "stats local",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/stats",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"stats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "stats gcp",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://meli-ip-trace-be.uc.r.appspot.com/stats",
+					"protocol": "https",
+					"host": [
+						"meli-ip-trace-be",
+						"uc",
+						"r",
+						"appspot",
+						"com"
+					],
+					"path": [
+						"stats"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

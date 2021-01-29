@@ -8,7 +8,10 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
-
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ */
 @SpringBootApplication(scanBasePackages = {"ar.com.ip.trace"})
 @EnableAutoConfiguration
 public class IPTraceBackendApplication extends SpringBootServletInitializer{

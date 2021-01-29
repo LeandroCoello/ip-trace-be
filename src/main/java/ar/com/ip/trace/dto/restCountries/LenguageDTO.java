@@ -1,5 +1,8 @@
 package ar.com.ip.trace.dto.restCountries;
-
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ */
 public class LenguageDTO {
 
 	private String iso639_1;

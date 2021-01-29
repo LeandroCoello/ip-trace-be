@@ -1,5 +1,8 @@
 package ar.com.ip.trace.dto;
-
+/**
+ * @author Leandro Coello (leandro.n.coello@gmail.com)
+ *
+ */
 public class IPRequestDTO {
 
 	private String ip;
