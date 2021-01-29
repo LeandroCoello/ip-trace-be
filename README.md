@@ -3,7 +3,7 @@
 IP Trace Backend es un servicio web que de acuerdo a una IP obtiene información del país de origen. 
 Está desarrollado con Java 8 y Maven superior a 3.5.0.
 
-# Entorno Local
+# Ambiente Local
 
 Utilizando el plugin de App Engine para maven. Se necesita Google Cloud SDK.
 
